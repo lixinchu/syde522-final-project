@@ -1,6 +1,8 @@
 import os
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler, LabelBinarizer
+from sklearn.model_selection import train_test_split
 
 def preprocess():
     # Data paths
@@ -16,23 +18,39 @@ def preprocess():
     train_df = pd.read_csv(train_data_path)
     test_df = pd.read_csv(test_data_path)
 
-    # Split datasets
-    X_train = train_df.drop(['label'], axis=1)
-    y_train = train_df['label']
+    train_labels = train_df['label']
+    train = train_df.drop(['label'], axis=1)
 
-    X_test = test_df.drop(['label'], axis=1)
-    y_test = test_df['label']
+    test_labels = test_df['label']
+    test = test_df.drop(['label'], axis=1)
+
+    # Reshaping images
+    train_images = train.values
+    train_images = np.array([np.reshape(i, (28, 28)) for i in train_images])
+    train_images = np.array([i.flatten() for i in train_images])
+
+    test_images = test.values
+    test_images = np.array([np.reshape(i, (28, 28)) for i in test_images])
+    test_images = np.array([i.flatten() for i in test_images])
+
+    # One hot encoding labels
+    binrizer = LabelBinarizer()
+    train_labels = binrizer.fit_transform(train_labels)
+    test_labels = binrizer.fit_transform(test_labels)
+
+    # Split into train and validation sets
+    X_train, X_valid, y_train, y_valid = train_test_split(train_images, train_labels, test_size=0.2, random_state=42)
 
     # Normalize pixel values [0, 1]
-    X_train_normalized = X_train/ 255.0
-    X_test_normalized = X_test / 255.0
+    X_train = X_train/ 255.0
+    X_valid = X_valid / 255.0
 
-    # Feature Scaling (0 mean, 1 SD)
-    scaler = MinMaxScaler()
-    X_train_scaled = scaler.fit_transform(X_train_normalized)
-    X_test_scaled = scaler.transform(X_test_normalized)
+    # Reshape to 4D array (CNN)
+    X_train = X_train.reshape(X_train.shape[0], 28, 28, 1)
+    X_valid = X_valid.reshape(X_valid.shape[0], 28, 28, 1)
+    test_images = test_images.reshape(test_images.shape[0], 28, 28, 1)
 
-    return X_train_scaled, y_train, X_test_scaled, y_test
+    return X_train, X_valid, test_images, y_train, y_valid, test_labels
 
 if __name__ == "__main__":
     preprocess()
