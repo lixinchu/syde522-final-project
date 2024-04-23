@@ -1,1 +1,3 @@
-Test
+- cnn.ipynb: cnn model experimentation (lixin)
+- data_preprocessing.py: call preprocess() function to get train, validation, and test data. might have to change the file paths depending on where the raw data files are on your computer.
+- data_exploration.ipynb: label distribution and sample image visualization 
